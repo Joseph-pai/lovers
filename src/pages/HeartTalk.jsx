@@ -13,6 +13,10 @@ const HeartTalk = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [isSoundEnabled, setIsSoundEnabled] = useState(false);
     const scrollRef = useRef();
+    // Use a persistent ref for the audio object.
+    // iOS "blesses" the specific element played during a user interaction.
+    // We must reuse THIS EXACT INSTANCE for subsequent plays to work.
+    const audioRef = useRef(new Audio('/notification.mp3'));
 
     useEffect(() => {
         loadMessages();
@@ -45,8 +49,10 @@ const HeartTalk = () => {
                         // AND sound is enabled by user
                         if (message.receiver_id === user.uid && message.sender_id !== user.uid) {
                             if (isSoundEnabled) {
-                                const audio = new Audio('/notification.mp3');
-                                audio.play().catch(e => console.error("Error playing sound:", e));
+                                // Reset time to 0 to allow replay
+                                audioRef.current.currentTime = 0;
+                                audioRef.current.volume = 1.0;
+                                audioRef.current.play().catch(e => console.error("Error playing sound (async):", e));
                             }
                         }
                     }
@@ -71,10 +77,14 @@ const HeartTalk = () => {
         setIsSoundEnabled(newState);
 
         if (newState) {
-            // "Unlock" the audio context by playing a sound immediately on user interaction
-            const audio = new Audio('/notification.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(e => console.error("Audio unlock failed:", e));
+            // "Unlock" the persistent audio object on iOS
+            // We play it, then immediately reset it
+            audioRef.current.volume = 0.5;
+            audioRef.current.play()
+                .then(() => {
+                    // Optional: we can reset volume here if needed
+                })
+                .catch(e => console.error("Audio unlock failed:", e));
         }
     };
 
