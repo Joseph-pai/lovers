@@ -387,14 +387,15 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
                         </div>
                     </form>
                     {predictions && (
-                        <div className="mt-4 p-3 bg-white/50 rounded-xl border border-rose-100 flex justify-around text-sm">
+                        <div className="mt-4 p-4 bg-white/50 rounded-xl border border-rose-200 flex justify-around items-center">
                             <div className="text-center">
-                                <p className="text-gray-400 text-xs mb-1">預計下次月經</p>
-                                <p className="font-bold text-rose-500">{predictions.nextPeriod}</p>
+                                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">預計下次月經</p>
+                                <p className="font-black text-lg text-rose-500">{predictions.nextPeriod}</p>
                             </div>
+                            <div className="w-px h-8 bg-rose-100"></div>
                             <div className="text-center">
-                                <p className="text-gray-400 text-xs mb-1">預計排卵日</p>
-                                <p className="font-bold text-purple-500">{predictions.ovulation}</p>
+                                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">預計排卵日</p>
+                                <p className="font-black text-lg text-purple-500">{predictions.ovulation}</p>
                             </div>
                         </div>
                     )}
