@@ -75,6 +75,9 @@ export const AuthProvider = ({ children }) => {
                 gender: profileData.gender,
                 usage_count: 0,
                 is_subscribed: false,
+                cycle_length: 28,
+                period_length: 5,
+                last_period_date: null,
                 updated_at: new Date().toISOString(),
             });
 
@@ -157,6 +160,9 @@ export const AuthProvider = ({ children }) => {
                 gender: 'female', // Default to female
                 usage_count: 0,
                 is_subscribed: false,
+                cycle_length: 28,
+                period_length: 5,
+                last_period_date: null,
                 updated_at: new Date().toISOString(),
             });
 
@@ -175,20 +181,20 @@ export const AuthProvider = ({ children }) => {
     };
 
 
-    const updateNickname = async (newNickname) => {
+    const updateProfile = async (updates) => {
         if (!auth.currentUser) return;
         const firebaseUser = auth.currentUser;
 
         const { error } = await supabase
             .from('profiles')
             .update({
-                nickname: newNickname,
+                ...updates,
                 updated_at: new Date().toISOString(),
             })
             .eq('id', firebaseUser.uid);
 
         if (error) {
-            console.error('Update nickname error:', error);
+            console.error('Update profile error:', error);
             throw new Error(error.message);
         }
 
@@ -204,6 +210,7 @@ export const AuthProvider = ({ children }) => {
         reloadUser,
         initializeProfile,
         updateNickname,
+        updateProfile,
         loading
     };
 
