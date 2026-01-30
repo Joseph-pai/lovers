@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSupabase } from '../hooks/useSupabase';
 import { useAuth } from '../context/AuthContext';
-import { Send, Heart, Trash2, Archive, X, AlertCircle } from 'lucide-react';
+import { Send, Heart, Trash2, Archive, X, AlertCircle, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +11,7 @@ const HeartTalk = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [showHistory, setShowHistory] = useState(false);
+    const [isSoundEnabled, setIsSoundEnabled] = useState(false);
     const scrollRef = useRef();
 
     useEffect(() => {
@@ -41,9 +42,12 @@ const HeartTalk = () => {
                         }
 
                         // Play sound ONLY if it's a new message from the partner (not looking at my own messages)
+                        // AND sound is enabled by user
                         if (message.receiver_id === user.uid && message.sender_id !== user.uid) {
-                            const audio = new Audio('/notification.mp3');
-                            audio.play().catch(e => console.error("Error playing sound:", e));
+                            if (isSoundEnabled) {
+                                const audio = new Audio('/notification.mp3');
+                                audio.play().catch(e => console.error("Error playing sound:", e));
+                            }
                         }
                     }
                 }
@@ -54,13 +58,25 @@ const HeartTalk = () => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user]);
+    }, [user, isSoundEnabled]); // Re-subscribe when sound setting changes to capture latest state closure
 
     useEffect(() => {
         if (scrollRef.current && !showHistory) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages, showHistory]);
+
+    const toggleSound = () => {
+        const newState = !isSoundEnabled;
+        setIsSoundEnabled(newState);
+
+        if (newState) {
+            // "Unlock" the audio context by playing a sound immediately on user interaction
+            const audio = new Audio('/notification.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(e => console.error("Audio unlock failed:", e));
+        }
+    };
 
     const loadMessages = async () => {
         if (!user) return;
@@ -135,6 +151,13 @@ const HeartTalk = () => {
                     <p className="text-[10px] text-gray-500 uppercase tracking-widest">End-to-End Encrypted Cloud Sync</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={toggleSound}
+                        className={`p-2 rounded-full transition-all ${isSoundEnabled ? 'bg-purple-100 text-purple-500' : 'bg-gray-100 text-gray-400'}`}
+                        title={isSoundEnabled ? "關閉提示音" : "開啟提示音"}
+                    >
+                        {isSoundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                    </button>
                     {historyMessages.length > 0 && (
                         <button
                             onClick={() => setShowHistory(!showHistory)}
