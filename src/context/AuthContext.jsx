@@ -201,6 +201,10 @@ export const AuthProvider = ({ children }) => {
         await reloadUser();
     };
 
+    const updateNickname = async (nickname) => {
+        return updateProfile({ nickname });
+    };
+
     const value = {
         user,
         login,
