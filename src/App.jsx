@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import AuthPage from './pages/AuthPage';
 import Layout from './components/Layout';
+import { HelpCircle, X } from 'lucide-react';
 import Tracking from './pages/Tracking';
 import HeartTalk from './pages/HeartTalk';
 import AIConsultation from './pages/AIConsultation';
@@ -14,6 +15,7 @@ function App() {
     const [activePage, setActivePage] = useState('home');
     const [selectedRecordDate, setSelectedRecordDate] = useState(null);
     const [isReloading, setIsReloading] = useState(false);
+    const [showUserManual, setShowUserManual] = useState(false);
 
     // Nickname Edit State
     const [isEditingName, setIsEditingName] = useState(false);
@@ -379,6 +381,87 @@ function App() {
     return (
         <Layout activePage={activePage} onNavigate={setActivePage}>
             {renderContent()}
+
+            {/* User Manual Toggle Button */}
+            <button
+                onClick={() => setShowUserManual(true)}
+                className="fixed bottom-24 right-6 w-12 h-12 bg-white/90 backdrop-blur-md border border-rose-100 rounded-full shadow-lg flex items-center justify-center text-rose-400 hover:scale-110 active:scale-95 transition-all z-[90]"
+                title="使用手冊"
+            >
+                <HelpCircle size={24} />
+            </button>
+
+            {/* User Manual Modal */}
+            {showUserManual && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/20 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="glass-card max-w-lg w-full max-h-[80vh] overflow-y-auto relative animate-in zoom-in duration-300">
+                        <button
+                            onClick={() => setShowUserManual(false)}
+                            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <X size={24} />
+                        </button>
+
+                        <div className="space-y-6">
+                            <div className="text-center pb-4 border-b border-rose-50">
+                                <h2 className="text-2xl font-bold text-gray-800">🌸 「來了嗎」使用手冊</h2>
+                                <p className="text-sm text-gray-400 mt-1 uppercase tracking-widest font-black">User Manual & Features</p>
+                            </div>
+
+                            <section className="space-y-4">
+                                <h3 className="font-bold text-rose-500 flex items-center gap-2">✨ 四大特色功能</h3>
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-rose-50/50 rounded-xl border border-rose-100/50">
+                                        <p className="font-bold text-sm text-gray-700">1. 精準週期追蹤 (Cycle Tracking)</p>
+                                        <p className="text-xs text-gray-500">自動預測生理期與排卵期，提供貼心的健康提醒。</p>
+                                    </div>
+                                    <div className="p-3 bg-purple-50/50 rounded-xl border border-purple-100/50">
+                                        <p className="font-bold text-sm text-gray-700">2. 細膩情緒紀錄 (Emotion Log)</p>
+                                        <p className="text-xs text-gray-500">每日一鍵記錄心情與生理症狀，圖像化您的心路歷程。</p>
+                                    </div>
+                                    <div className="p-3 bg-sky-50/50 rounded-xl border border-sky-100/50">
+                                        <p className="font-bold text-sm text-gray-700">3. 伴侶分權共享 (Partner Sharing)</p>
+                                        <p className="text-xs text-gray-500">女生管理數據，男生接收提醒，學習如何在特殊日子給予照顧。</p>
+                                    </div>
+                                    <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+                                        <p className="font-bold text-sm text-gray-700">4. AI 雲端諮詢員 (AI Consultation)</p>
+                                        <p className="text-xs text-gray-500">專業狐狸助理 24 小時在線，為健康或感情提供溫和建議。</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="space-y-3">
+                                <h3 className="font-bold text-rose-500 flex items-center gap-2">🚀 快速上手指南</h3>
+                                <ul className="text-sm text-gray-600 space-y-3 px-2">
+                                    <li className="flex gap-2">
+                                        <span className="text-rose-400">●</span>
+                                        <span><span className="font-bold">開始記錄</span>：點擊首頁「身心紀錄」即可填寫每日狀態。</span>
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <span className="text-rose-400">●</span>
+                                        <span><span className="font-bold">查看預測</span>：在月曆中可看到標註為小圓點的預測日期。</span>
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <span className="text-rose-400">●</span>
+                                        <span><span className="font-bold">尋求建議</span>：進入「AI 雲端諮詢」與狐狸助理互動。</span>
+                                    </li>
+                                    <li className="flex gap-2">
+                                        <span className="text-rose-400">●</span>
+                                        <span><span className="font-bold">設定週期</span>：在月曆下方可隨時調整平均天數與最近經期。</span>
+                                    </li>
+                                </ul>
+                            </section>
+
+                            <button
+                                onClick={() => setShowUserManual(false)}
+                                className="w-full bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-all text-lg"
+                            >
+                                開始使用
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 }
