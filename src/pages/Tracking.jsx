@@ -123,8 +123,8 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
         }
 
         await upsertData('records', record);
+        await loadRecords(); // Wait for records to reload before showing alert
         alert(editingRecord ? '紀錄已更新！' : '紀錄已儲存！');
-        loadRecords();
     };
 
     const handleDelete = async () => {
@@ -142,13 +142,13 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
         if (error) {
             alert('刪除失敗：' + error.message);
         } else {
-            alert('紀錄已刪除！');
             setEditingRecord(null);
             setSelectedFlow(null);
             setSelectedEmotions([]);
             setSelectedSymptoms([]);
             setNote('');
-            loadRecords();
+            await loadRecords(); // Wait for records to reload before showing alert
+            alert('紀錄已刪除！');
         }
     };
 
