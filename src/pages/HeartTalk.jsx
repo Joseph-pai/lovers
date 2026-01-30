@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Send, Heart, Trash2, Archive, X, AlertCircle, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSound } from '../context/SoundContext';
 
 const HeartTalk = () => {
     const { user } = useAuth();
@@ -11,12 +12,8 @@ const HeartTalk = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [showHistory, setShowHistory] = useState(false);
-    const [isSoundEnabled, setIsSoundEnabled] = useState(false);
+    const { isSoundEnabled, toggleSound } = useSound();
     const scrollRef = useRef();
-    // Use a persistent ref for the audio object.
-    // iOS "blesses" the specific element played during a user interaction.
-    // We must reuse THIS EXACT INSTANCE for subsequent plays to work.
-    const audioRef = useRef(new Audio('/notification.mp3'));
 
     useEffect(() => {
         loadMessages();
@@ -44,17 +41,6 @@ const HeartTalk = () => {
                         if (message.sender_id === user.uid || message.receiver_id === user.uid) {
                             loadMessages();
                         }
-
-                        // Play sound ONLY if it's a new message from the partner (not looking at my own messages)
-                        // AND sound is enabled by user
-                        if (message.receiver_id === user.uid && message.sender_id !== user.uid) {
-                            if (isSoundEnabled) {
-                                // Reset time to 0 to allow replay
-                                audioRef.current.currentTime = 0;
-                                audioRef.current.volume = 1.0;
-                                audioRef.current.play().catch(e => console.error("Error playing sound (async):", e));
-                            }
-                        }
                     }
                 }
             )
@@ -64,7 +50,7 @@ const HeartTalk = () => {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user, isSoundEnabled]); // Re-subscribe when sound setting changes to capture latest state closure
+    }, [user]); // Re-subscribe when user changes
 
     useEffect(() => {
         if (scrollRef.current && !showHistory) {
@@ -72,21 +58,7 @@ const HeartTalk = () => {
         }
     }, [messages, showHistory]);
 
-    const toggleSound = () => {
-        const newState = !isSoundEnabled;
-        setIsSoundEnabled(newState);
 
-        if (newState) {
-            // "Unlock" the persistent audio object on iOS
-            // We play it, then immediately reset it
-            audioRef.current.volume = 0.5;
-            audioRef.current.play()
-                .then(() => {
-                    // Optional: we can reset volume here if needed
-                })
-                .catch(e => console.error("Audio unlock failed:", e));
-        }
-    };
 
     const loadMessages = async () => {
         if (!user) return;
