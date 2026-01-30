@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import AuthPage from './pages/AuthPage';
 import Layout from './components/Layout';
-import { HelpCircle, X } from 'lucide-react';
+import { HelpCircle, X, Heart, Link as LinkIcon, Users, Crown, Mail, Edit2, Check } from 'lucide-react';
 import Tracking from './pages/Tracking';
 import HeartTalk from './pages/HeartTalk';
 import AIConsultation from './pages/AIConsultation';
 import Partner from './pages/Partner';
 import Subscription from './pages/Subscription';
-import { Heart, Link as LinkIcon, Users, Crown, Mail, Edit2, Check, X } from 'lucide-react';
 
 function App() {
     const { user, reloadUser, logout, initializeProfile, updateNickname } = useAuth();
