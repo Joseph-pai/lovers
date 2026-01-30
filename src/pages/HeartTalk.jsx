@@ -26,17 +26,25 @@ const HeartTalk = () => {
             .on(
                 'postgres_changes',
                 {
-                    event: '*', // Listen to INSERT, UPDATE, DELETE
+                    event: 'INSERT', // Only listen for new messages for sound notification
                     schema: 'public',
                     table: 'messages'
                 },
                 (payload) => {
-                    console.log('Message change received:', payload);
-                    // Check if this message involves the current user
-                    const message = payload.new || payload.old;
-                    if (message && (message.sender_id === user.uid || message.receiver_id === user.uid)) {
-                        // Reload messages when a relevant change occurs
-                        loadMessages();
+                    console.log('New message received:', payload);
+                    const message = payload.new;
+
+                    if (message) {
+                        // If it's a message for me (or from me), reload
+                        if (message.sender_id === user.uid || message.receiver_id === user.uid) {
+                            loadMessages();
+                        }
+
+                        // Play sound ONLY if it's a new message from the partner (not looking at my own messages)
+                        if (message.receiver_id === user.uid && message.sender_id !== user.uid) {
+                            const audio = new Audio('/notification.mp3');
+                            audio.play().catch(e => console.error("Error playing sound:", e));
+                        }
                     }
                 }
             )
