@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const Calendar = ({ currentDate, onDateClick, records, viewMode = 'month', onViewMonth }) => {
+const Calendar = ({ currentDate, onDateClick, records, predictions, viewMode = 'month', onViewMonth }) => {
     const month = currentDate.getMonth();
     const year = currentDate.getFullYear();
 
@@ -13,11 +13,16 @@ const Calendar = ({ currentDate, onDateClick, records, viewMode = 'month', onVie
         for (let i = 1; i <= daysInMonth; i++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             const dayRecords = records.filter(r => r.date === dateStr);
+            const isPredictedPeriod = predictions?.nextPeriod === dateStr;
+            const isPredictedOvulation = predictions?.ovulation === dateStr;
+
             arr.push({
                 day: i,
                 dateStr,
                 records: dayRecords,
-                isToday: dateStr === new Date().toISOString().split('T')[0]
+                isToday: dateStr === new Date().toISOString().split('T')[0],
+                isPredictedPeriod,
+                isPredictedOvulation
             });
         }
 
@@ -36,8 +41,10 @@ const Calendar = ({ currentDate, onDateClick, records, viewMode = 'month', onVie
                             {d && (
                                 <div className="w-full flex flex-col h-full">
                                     <div className="p-1 flex flex-col items-center mt-1">
-                                        <span className={`flex items-center justify-center w-9 h-9 text-lg font-medium rounded-full transition-colors ${d.isToday ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>
+                                        <span className={`flex items-center justify-center w-9 h-9 text-lg font-medium rounded-full transition-colors relative ${d.isToday ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>
                                             {d.day}
+                                            {d.isPredictedPeriod && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-400 rounded-full border-2 border-white shadow-sm" title="預測經期"></div>}
+                                            {d.isPredictedOvulation && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-purple-400 rounded-full border-2 border-white shadow-sm" title="預測排卵日"></div>}
                                         </span>
                                         <span className={`text-[9px] mt-0.5 ${d.isToday ? 'text-blue-600 font-bold' : 'text-gray-400'}`}>
                                             {d.isToday ? '初一' : (d.day % 2 === 0 ? '初二' : '初三')}
