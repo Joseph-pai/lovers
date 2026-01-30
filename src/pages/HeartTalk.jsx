@@ -15,7 +15,37 @@ const HeartTalk = () => {
 
     useEffect(() => {
         loadMessages();
-        // In a real app, subscribe to Supabase real-time here
+
+        // Subscribe to real-time message updates
+        if (!user) return;
+
+        // Listen to all message changes in the table
+        // We filter client-side because Supabase realtime filters don't support OR conditions
+        const channel = supabase
+            .channel('messages-channel')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*', // Listen to INSERT, UPDATE, DELETE
+                    schema: 'public',
+                    table: 'messages'
+                },
+                (payload) => {
+                    console.log('Message change received:', payload);
+                    // Check if this message involves the current user
+                    const message = payload.new || payload.old;
+                    if (message && (message.sender_id === user.uid || message.receiver_id === user.uid)) {
+                        // Reload messages when a relevant change occurs
+                        loadMessages();
+                    }
+                }
+            )
+            .subscribe();
+
+        // Cleanup subscription on unmount
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [user]);
 
     useEffect(() => {
