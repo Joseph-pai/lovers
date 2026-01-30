@@ -4,7 +4,30 @@
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Viewport for responsive design and screen rotation -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#FF85A2" />
+    <meta name="msapplication-TileColor" content="#FF85A2" />
+
+    <!-- iOS Specific Meta Tags for PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="來了嗎" />
+    <link rel="apple-touch-icon" href="/fox_icon.png" />
+
+    <!-- Android Chrome -->
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Prevent auto-zoom on input focus (iOS) -->
+    <meta name="format-detection" content="telephone=no" />
+
     <title>來了嗎 V2.0</title>
 </head>
 
