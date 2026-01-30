@@ -198,7 +198,7 @@ const AIConsultation = () => {
 
             <div
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto space-y-6 p-4 custom-scrollbar"
+                className="flex-1 overflow-y-auto space-y-8 p-4 custom-scrollbar"
             >
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center py-10 opacity-60">
@@ -238,10 +238,10 @@ const AIConsultation = () => {
                                             e.stopPropagation();
                                             handleDelete(m.id);
                                         }}
-                                        className={`absolute -bottom-6 ${m.role === 'user' ? 'right-0' : 'left-0'} p-1 text-gray-300 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity`}
+                                        className={`absolute -bottom-7 ${m.role === 'user' ? 'right-0' : 'left-0'} w-10 h-10 flex items-center justify-center text-gray-400 hover:text-rose-400 opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity active:text-rose-500 rounded-full active:bg-rose-50`}
                                         title="刪除此對話"
                                     >
-                                        <Trash2 size={12} />
+                                        <Trash2 size={16} />
                                     </button>
                                 )}
                             </div>
