@@ -1,0 +1,26 @@
+{
+    "name": "來了嗎 - 伴侶健康追蹤",
+    "short_name": "來了嗎",
+    "description": "專為情侶設計的生理週期追蹤與情緒記錄應用",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FFFBFA",
+    "theme_color": "#FF85A2",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/fox_icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "health",
+        "lifestyle"
+    ],
+    "lang": "zh-TW",
+    "dir": "ltr",
+    "scope": "/",
+    "prefer_related_applications": false
+}
