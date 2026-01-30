@@ -22,6 +22,12 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
     const [selectedEmotions, setSelectedEmotions] = useState([]);
     const [selectedSymptoms, setSelectedSymptoms] = useState([]);
     const [note, setNote] = useState('');
+    const { updateProfile } = useAuth(); // Access updateProfile
+    const [cycleSettings, setCycleSettings] = useState({
+        cycle_length: user?.cycle_length || 28,
+        period_length: user?.period_length || 5,
+        last_period_date: user?.last_period_date || ''
+    });
 
     const isMale = user?.gender === 'male';
 
@@ -161,6 +167,36 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
         }
         setCurrentDate(next);
     };
+
+    const handleUpdateCycleSettings = async (e) => {
+        e.preventDefault();
+        try {
+            await updateProfile(cycleSettings);
+            alert('週期設定已更新！');
+        } catch (err) {
+            alert('更新失敗：' + err.message);
+        }
+    };
+
+    const predictions = useMemo(() => {
+        if (!user?.last_period_date || isMale) return null;
+
+        const lastDate = new Date(user.last_period_date);
+        const cycleLen = user.cycle_length || 28;
+
+        // Next period
+        const nextPeriod = new Date(lastDate);
+        nextPeriod.setDate(lastDate.getDate() + cycleLen);
+
+        // Ovulation (usually 14 days before next period)
+        const ovulation = new Date(nextPeriod);
+        ovulation.setDate(nextPeriod.getDate() - 14);
+
+        return {
+            nextPeriod: nextPeriod.toISOString().split('T')[0],
+            ovulation: ovulation.toISOString().split('T')[0]
+        };
+    }, [user, isMale]);
 
     const toggleItem = (list, setList, item) => {
         if (list.includes(item)) {
@@ -303,6 +339,7 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
                         currentDate={currentDate}
                         records={filteredRecords}
                         viewMode={viewMode}
+                        predictions={predictions}
                         onViewMonth={(date) => {
                             setCurrentDate(date);
                             setViewMode('month');
@@ -315,6 +352,52 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
                             }
                         }}
                     />
+                </div>
+            )}
+
+            {/* Cycle Settings - Only for Female */}
+            {!isMale && (mode === 'calendar' || mode === 'all') && (
+                <div className="glass-card bg-rose-50/30 border-rose-100 p-6">
+                    <h3 className="text-lg font-bold text-rose-500 mb-4 flex items-center gap-2">
+                        <Settings size={20} /> 週期預測設定
+                    </h3>
+                    <form onSubmit={handleUpdateCycleSettings} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">平均週期 (天)</label>
+                            <input
+                                type="number"
+                                value={cycleSettings.cycle_length}
+                                onChange={(e) => setCycleSettings({ ...cycleSettings, cycle_length: parseInt(e.target.value) })}
+                                className="w-full bg-white border border-rose-100 rounded-xl px-4 py-2 outline-none focus:border-rose-300"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">最近月經首日</label>
+                            <input
+                                type="date"
+                                value={cycleSettings.last_period_date}
+                                onChange={(e) => setCycleSettings({ ...cycleSettings, last_period_date: e.target.value })}
+                                className="w-full bg-white border border-rose-100 rounded-xl px-4 py-2 outline-none focus:border-rose-300"
+                            />
+                        </div>
+                        <div className="flex items-end">
+                            <button type="submit" className="w-full bg-rose-400 text-white font-bold py-2 rounded-xl shadow-sm hover:bg-rose-500 transition-all active:scale-95">
+                                更新預測
+                            </button>
+                        </div>
+                    </form>
+                    {predictions && (
+                        <div className="mt-4 p-3 bg-white/50 rounded-xl border border-rose-100 flex justify-around text-sm">
+                            <div className="text-center">
+                                <p className="text-gray-400 text-xs mb-1">預計下次月經</p>
+                                <p className="font-bold text-rose-500">{predictions.nextPeriod}</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-gray-400 text-xs mb-1">預計排卵日</p>
+                                <p className="font-bold text-purple-500">{predictions.ovulation}</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
