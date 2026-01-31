@@ -37,19 +37,28 @@ export const AuthProvider = ({ children }) => {
                     });
                 }
 
-                let partnerNickname = null;
-                if (profile?.partner_id) {
-                    const { data: partnerData } = await supabase
-                        .from('profiles')
-                        .select('nickname')
-                        .eq('id', profile.partner_id)
-                        .maybeSingle();
-                    if (partnerData) {
-                        partnerNickname = partnerData.nickname;
+                // Fetch linked partners from partner_links
+                const { data: links } = await supabase
+                    .from('partner_links')
+                    .select('female_id, male_id')
+                    .or(`female_id.eq.${firebaseUser.uid},male_id.eq.${firebaseUser.uid}`);
+
+                const linkedPartners = [];
+                if (links && links.length > 0) {
+                    for (const link of links) {
+                        const partnerId = profile.gender === 'female' ? link.male_id : link.female_id;
+                        const { data: partnerData } = await supabase
+                            .from('profiles')
+                            .select('id, nickname')
+                            .eq('id', partnerId)
+                            .maybeSingle();
+                        if (partnerData) {
+                            linkedPartners.push(partnerData);
+                        }
                     }
                 }
 
-                setUser({ ...firebaseUser, ...profile, partner_nickname: partnerNickname });
+                setUser({ ...firebaseUser, ...profile, linked_partners: linkedPartners });
             } else {
                 setUser(null);
             }
@@ -131,19 +140,28 @@ export const AuthProvider = ({ children }) => {
                 .maybeSingle();
 
             if (error) console.error('Reload user profile error:', error);
-            let partnerNickname = null;
-            if (profile?.partner_id) {
-                const { data: partnerData } = await supabase
-                    .from('profiles')
-                    .select('nickname')
-                    .eq('id', profile.partner_id)
-                    .maybeSingle();
-                if (partnerData) {
-                    partnerNickname = partnerData.nickname;
+            // Fetch linked partners from partner_links
+            const { data: links } = await supabase
+                .from('partner_links')
+                .select('female_id, male_id')
+                .or(`female_id.eq.${firebaseUser.uid},male_id.eq.${firebaseUser.uid}`);
+
+            const linkedPartners = [];
+            if (links && links.length > 0) {
+                for (const link of links) {
+                    const partnerId = profile.gender === 'female' ? link.male_id : link.female_id;
+                    const { data: partnerData } = await supabase
+                        .from('profiles')
+                        .select('id, nickname')
+                        .eq('id', partnerId)
+                        .maybeSingle();
+                    if (partnerData) {
+                        linkedPartners.push(partnerData);
+                    }
                 }
             }
 
-            setUser({ ...firebaseUser, ...profile, partner_nickname: partnerNickname });
+            setUser({ ...firebaseUser, ...profile, linked_partners: linkedPartners });
         }
     };
 
