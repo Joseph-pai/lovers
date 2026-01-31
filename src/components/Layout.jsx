@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Home, Calendar, MessageSquare, Heart, Settings, LogOut, Edit } from 'lucide-react';
 
-const Layout = ({ children, activePage, onNavigate }) => {
+const Layout = ({ children, activePage, onNavigate, onShowManual }) => {
     const { logout, user } = useAuth();
 
     const navItems = [
@@ -18,11 +18,19 @@ const Layout = ({ children, activePage, onNavigate }) => {
         <div className="min-h-screen bg-[#FFFBF9] text-gray-800 flex flex-col pb-24">
             {/* Top Header */}
             <header className="px-6 py-5 flex justify-between items-center bg-white/70 backdrop-blur-xl sticky top-0 z-50 border-b border-rose-50/50 shadow-sm">
-                <div className="flex flex-col">
-                    <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-rose-400 to-pink-500 tracking-tight">
-                        Lover V2.0
-                    </h1>
-                    <span className="text-[9px] font-bold text-gray-300 uppercase tracking-[0.2em] leading-none mt-1">Cloud Personal Assistant</span>
+                <div className="flex items-center gap-3">
+                    <div className="flex flex-col">
+                        <h1 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-rose-400 to-pink-500 tracking-tight">
+                            Lover V2.0
+                        </h1>
+                        <span className="text-[9px] font-bold text-gray-300 uppercase tracking-[0.2em] leading-none mt-1">Cloud Personal Assistant</span>
+                    </div>
+                    <button
+                        onClick={onShowManual}
+                        className="px-2 py-0.5 bg-rose-50 text-[10px] text-rose-400 font-black rounded-lg border border-rose-100/50 hover:bg-rose-100 transition-all active:scale-95"
+                    >
+                        使用說明
+                    </button>
                 </div>
                 <button
                     onClick={logout}
