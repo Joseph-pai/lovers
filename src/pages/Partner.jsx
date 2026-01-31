@@ -156,39 +156,37 @@ const Partner = ({ onUpgrade }) => {
 
             {/* Invitation Section - Only for Female */}
             {user.gender === 'female' && (
-                <div className="glass-card">
-                    <h3 className="text-sm font-bold text-gray-400 mb-4 uppercase tracking-[0.3em] text-center">您的邀約連結代碼</h3>
+                <div className="glass-card bg-gradient-to-br from-rose-50/50 to-white">
+                    <button
+                        onClick={handleGenerateCode}
+                        className="w-full mb-6 group transition-transform active:scale-95"
+                    >
+                        <h3 className="text-3xl font-black text-rose-400 uppercase tracking-tighter text-center animate-pulse">
+                            ✨ 生成新的邀請碼
+                        </h3>
+                    </button>
 
                     {activeInvite ? (
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between bg-gradient-to-br from-rose-50 to-white border border-rose-100 p-6 rounded-3xl shadow-sm">
+                            <div className="flex items-center justify-between bg-white border-2 border-rose-100 p-6 rounded-3xl shadow-sm">
                                 <span className="text-3xl font-black tracking-[0.2em] text-rose-500 drop-shadow-sm">{activeInvite}</span>
                                 <button
                                     onClick={handleCopy}
-                                    className="p-4 bg-white text-rose-500 rounded-2xl border border-rose-100/50 hover:bg-rose-50 transition-all active:scale-95 shadow-sm"
+                                    className="p-4 bg-rose-50 text-rose-500 rounded-2xl border border-rose-100/50 hover:bg-rose-100 transition-all active:scale-95 shadow-sm"
                                 >
                                     {copied ? <Check size={20} className="text-green-500" /> : <Copy size={20} />}
                                 </button>
                             </div>
-                            <button
-                                onClick={handleGenerateCode}
-                                className="text-xs text-rose-300 font-bold hover:text-rose-400 transition-colors uppercase tracking-widest text-center"
-                            >
-                                🔄 生成新的邀請碼
-                            </button>
                         </div>
                     ) : (
-                        <button
-                            onClick={handleGenerateCode}
-                            className="w-full py-8 border-2 border-dashed border-rose-100 rounded-3xl text-rose-400 font-bold hover:bg-rose-50/50 transition-all group"
-                        >
-                            <span className="flex items-center justify-center gap-2 group-hover:scale-105 transition-transform">
-                                ✨ 點擊生成一次性邀請碼
-                            </span>
-                        </button>
+                        <div className="py-8 border-2 border-dashed border-rose-100 rounded-3xl text-gray-300 font-bold text-center italic">
+                            點擊上方按鈕開啟您的守護連結
+                        </div>
                     )}
 
-                    <p className="text-[10px] text-gray-400 text-center mt-4 font-bold italic">分享代碼給伴侶，單次使用後失效</p>
+                    <p className="text-[10px] text-gray-400 text-center mt-4 font-bold italic tracking-widest">
+                        邀請碼僅限單次使用，連結後即失效
+                    </p>
                 </div>
             )}
 
@@ -236,30 +234,8 @@ const Partner = ({ onUpgrade }) => {
                         {user.gender === 'male' && (
                             <p className="text-[10px] text-gray-300 font-bold italic">* 守護者無法主動解除連結，需由伴侶操作</p>
                         )}
-
-                        {user.gender === 'female' && (
-                            <div className="pt-4 border-t border-rose-50">
-                                <p className="text-[10px] text-gray-400 font-bold mb-4 uppercase tracking-widest">需要連結更多伴侶？</p>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        maxLength={6}
-                                        value={inviteCodeInput}
-                                        onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
-                                        placeholder="輸入新代碼"
-                                        className="flex-1 bg-white border border-rose-100 rounded-xl px-4 py-2 text-center text-lg font-black outline-none focus:border-rose-400 text-rose-500 placeholder:text-gray-100"
-                                    />
-                                    <button
-                                        onClick={handleConnect}
-                                        className="bg-rose-400 text-white px-4 rounded-xl font-bold active:scale-95 transition-all text-sm"
-                                    >
-                                        連線
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
-                ) : (
+                ) : user.gender === 'male' ? (
                     <>
                         <h3 className="text-[10px] font-bold text-gray-400 mb-6 uppercase tracking-[0.3em] text-center">輸入伴侶邀請碼</h3>
                         <div className="flex gap-2 mb-6">
@@ -280,6 +256,10 @@ const Partner = ({ onUpgrade }) => {
                             {statusMessage || '建立連結'}
                         </button>
                     </>
+                ) : (
+                    <div className="text-center py-6">
+                        <p className="text-gray-300 italic">暫時沒有守護者連結，生成上方代碼邀請伴侶吧！</p>
+                    </div>
                 )}
             </div>
 
