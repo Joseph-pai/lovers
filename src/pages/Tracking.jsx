@@ -28,12 +28,25 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
         period_length: user?.period_length || 5,
         last_period_date: user?.last_period_date || ''
     });
+    const [partnerProfile, setPartnerProfile] = useState(null);
 
     const isMale = user?.gender === 'male';
 
     useEffect(() => {
         loadRecords();
-    }, [user]);
+        if (isMale && user?.linked_partners?.length > 0) {
+            const fetchPartnerProfile = async () => {
+                const partnerId = user.linked_partners[0].id;
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', partnerId)
+                    .maybeSingle();
+                if (data) setPartnerProfile(data);
+            };
+            fetchPartnerProfile();
+        }
+    }, [user, isMale]);
 
     useEffect(() => {
         if (propSelectedDate) {
@@ -54,7 +67,10 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
 
     useEffect(() => {
         // Load existing record when date changes
-        const existing = records.find(r => r.date === selectedDate && r.user_id === user?.uid);
+        const partnerId = isMale && user?.linked_partners?.[0]?.id;
+        const targetUserId = isMale ? partnerId : user?.uid;
+
+        const existing = records.find(r => r.date === selectedDate && r.user_id === targetUserId);
         if (existing) {
             setEditingRecord(existing);
             setSelectedFlow(existing.flow);
@@ -68,7 +84,7 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
             setSelectedSymptoms([]);
             setNote('');
         }
-    }, [selectedDate, records, user]);
+    }, [selectedDate, records, user, isMale]);
 
     useEffect(() => {
         const handleClickOutside = () => setShowViewDropdown(false);
@@ -171,10 +187,11 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
     };
 
     const predictions = useMemo(() => {
-        if (!user?.last_period_date || isMale) return null;
+        const targetProfile = isMale ? partnerProfile : user;
+        if (!targetProfile?.last_period_date) return null;
 
-        const lastDate = new Date(user.last_period_date);
-        const cycleLen = user.cycle_length || 28;
+        const lastDate = new Date(targetProfile.last_period_date);
+        const cycleLen = targetProfile.cycle_length || 28;
 
         // Next period
         const nextPeriod = new Date(lastDate);
@@ -188,7 +205,7 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
             nextPeriod: nextPeriod.toISOString().split('T')[0],
             ovulation: ovulation.toISOString().split('T')[0]
         };
-    }, [user, isMale]);
+    }, [user, isMale, partnerProfile]);
 
     const toggleItem = (list, setList, item) => {
         if (list.includes(item)) {
@@ -332,6 +349,7 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
                         records={filteredRecords}
                         viewMode={viewMode}
                         predictions={predictions}
+                        selectedDate={selectedDate}
                         onViewMonth={(date) => {
                             setCurrentDate(date);
                             setViewMode('month');
@@ -427,9 +445,9 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
                                     {['少', '中', '多', '無'].map(f => (
                                         <button
                                             key={f}
-                                            onClick={() => setSelectedFlow(f === '無' ? null : f)}
+                                            onClick={() => !isMale && setSelectedFlow(f === '無' ? null : f)}
                                             className={`flex-1 py-4 rounded-2xl text-base transition-all border shadow-sm ${selectedFlow === f || (f === '無' && !selectedFlow) ? 'bg-gradient-to-br from-rose-400 to-pink-500 border-rose-400 text-white font-bold' : 'bg-white border-rose-50 text-gray-400 hover:border-rose-200'
-                                                }`}
+                                                } ${isMale ? 'cursor-default grayscale-[0.5]' : ''}`}
                                         >
                                             {f}
                                         </button>
@@ -445,9 +463,9 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
                                 {['快樂', '平靜', '憂鬱', '易怒', '焦慮', '倦怠', '低潮', '敏感', '煩躁', '興奮', '期盼', '悲傷', '恐懼', '厭惡', '孤獨', '虛無感'].map(e => (
                                     <button
                                         key={e}
-                                        onClick={() => toggleItem(selectedEmotions, setSelectedEmotions, e)}
+                                        onClick={() => !isMale && toggleItem(selectedEmotions, setSelectedEmotions, e)}
                                         className={`px-5 py-3 rounded-xl text-sm transition-all border shadow-sm ${selectedEmotions.includes(e) ? 'bg-gradient-to-br from-purple-400 to-indigo-500 border-purple-400 text-white font-bold' : 'bg-white border-purple-50 text-gray-500 hover:border-purple-100'
-                                            }`}
+                                            } ${isMale ? 'cursor-default grayscale-[0.5]' : ''}`}
                                     >
                                         {e}
                                     </button>
@@ -462,9 +480,9 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
                                 {['肚子疼', '疲倦', '四肢無力', '容易抽筋', '頭痛', '過敏', '感冒症狀', '噁心', '腰痠背痛', '腦霧', '拉肚子', '便秘', '痠痛', '體重降低', '精力旺盛'].map(s => (
                                     <button
                                         key={s}
-                                        onClick={() => toggleItem(selectedSymptoms, setSelectedSymptoms, s)}
+                                        onClick={() => !isMale && toggleItem(selectedSymptoms, setSelectedSymptoms, s)}
                                         className={`px-5 py-3 rounded-xl text-sm transition-all border shadow-sm ${selectedSymptoms.includes(s) ? 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-400 text-white font-bold' : 'bg-white border-amber-50 text-gray-500 hover:border-amber-100'
-                                            }`}
+                                            } ${isMale ? 'cursor-default grayscale-[0.5]' : ''}`}
                                     >
                                         {s}
                                     </button>
@@ -477,31 +495,38 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
                             <label className="text-sm text-gray-400 block mb-4 uppercase tracking-[0.2em] font-black">今日備註 • Notes</label>
                             <textarea
                                 value={note}
-                                onChange={(e) => setNote(e.target.value)}
-                                className="w-full bg-white border border-rose-50 rounded-2xl p-5 text-base outline-none focus:border-rose-200 focus:bg-white min-h-[120px] resize-none text-gray-700 placeholder:text-gray-200 shadow-sm"
-                                placeholder="寫下妳的感受或特別的小提醒..."
+                                onChange={(e) => !isMale && setNote(e.target.value)}
+                                readOnly={isMale}
+                                className={`w-full bg-white border border-rose-50 rounded-2xl p-5 text-base outline-none focus:border-rose-200 focus:bg-white min-h-[120px] resize-none text-gray-700 placeholder:text-gray-200 shadow-sm ${isMale ? 'bg-gray-50/50 text-gray-400' : ''}`}
+                                placeholder={isMale ? '對方尚未填寫備註...' : '寫下妳的感受或特別的小提醒...'}
                             />
                         </div>
 
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleSave}
-                                disabled={loading}
-                                className="btn-primary flex-1 flex items-center justify-center gap-3 py-5 text-lg"
-                            >
-                                <Save size={22} />
-                                {loading ? '同步雲端中...' : (editingRecord ? '更新紀錄' : '儲存紀錄')}
-                            </button>
-                            {editingRecord && (
+                        {!isMale ? (
+                            <div className="flex gap-3">
                                 <button
-                                    onClick={handleDelete}
+                                    onClick={handleSave}
                                     disabled={loading}
-                                    className="px-6 py-5 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-100 active:scale-95 transition-all border border-red-100"
+                                    className="btn-primary flex-1 flex items-center justify-center gap-3 py-5 text-lg"
                                 >
-                                    刪除
+                                    <Save size={22} />
+                                    {loading ? '同步雲端中...' : (editingRecord ? '更新紀錄' : '儲存紀錄')}
                                 </button>
-                            )}
-                        </div>
+                                {editingRecord && (
+                                    <button
+                                        onClick={handleDelete}
+                                        disabled={loading}
+                                        className="px-6 py-5 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-100 active:scale-95 transition-all border border-red-100"
+                                    >
+                                        刪除
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="w-full py-5 bg-sky-50 text-sky-500 rounded-2xl font-bold text-center border border-sky-100 flex items-center justify-center gap-2">
+                                <ShieldCheck size={20} /> 已進入守護者瀏覽模式
+                            </div>
+                        )}
                     </div>
                 </section>
             )}
