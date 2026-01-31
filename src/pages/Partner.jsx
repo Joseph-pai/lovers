@@ -196,7 +196,7 @@ const Partner = ({ onUpgrade }) => {
                     <h3 className="text-[10px] font-bold text-gray-400 mb-4 uppercase tracking-[0.3em] text-center">您的守護對象</h3>
                     <div className="flex items-center justify-center bg-gradient-to-br from-blue-50 to-white border border-blue-100 p-8 rounded-3xl shadow-sm">
                         <span className="text-4xl font-black text-blue-500 drop-shadow-sm">
-                            {user.partner_nickname || '尚未連結'}
+                            {user.linked_partners?.[0]?.nickname || '尚未連結'}
                         </span>
                     </div>
                 </div>
