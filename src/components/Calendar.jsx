@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const Calendar = ({ currentDate, onDateClick, records, predictions, viewMode = 'month', onViewMonth }) => {
+const Calendar = ({ currentDate, onDateClick, records, predictions, viewMode = 'month', onViewMonth, selectedDate }) => {
     const month = currentDate.getMonth();
     const year = currentDate.getFullYear();
 
@@ -21,6 +21,7 @@ const Calendar = ({ currentDate, onDateClick, records, predictions, viewMode = '
                 dateStr,
                 records: dayRecords,
                 isToday: dateStr === new Date().toISOString().split('T')[0],
+                isSelected: dateStr === selectedDate,
                 isPredictedPeriod,
                 isPredictedOvulation
             });
@@ -36,17 +37,17 @@ const Calendar = ({ currentDate, onDateClick, records, predictions, viewMode = '
                         <div
                             key={i}
                             onClick={() => d && onDateClick(d.dateStr)}
-                            className={`min-h-[140px] flex flex-col items-center justify-start border-r border-b border-gray-100 transition-colors relative cursor-pointer group ${!d ? 'bg-[#F9F9F9]' : 'hover:bg-gray-50/50'}`}
+                            className={`min-h-[140px] flex flex-col items-center justify-start border-r border-b border-gray-100 transition-colors relative cursor-pointer group ${!d ? 'bg-[#F9F9F9]' : ''} ${d?.isSelected ? 'bg-rose-50/50' : 'hover:bg-gray-50/50'}`}
                         >
                             {d && (
                                 <div className="w-full flex flex-col h-full">
                                     <div className="p-1 flex flex-col items-center mt-1">
-                                        <span className={`flex items-center justify-center w-9 h-9 text-lg font-medium rounded-full transition-colors relative ${d.isToday ? 'bg-blue-600 text-white' : 'text-gray-500'}`}>
+                                        <span className={`flex items-center justify-center w-9 h-9 text-lg font-medium rounded-full transition-colors relative ${d.isToday ? 'bg-blue-600 text-white' : d.isSelected ? 'bg-rose-400 text-white' : 'text-gray-500'}`}>
                                             {d.day}
                                             {d.isPredictedPeriod && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-400 rounded-full border-2 border-white shadow-sm" title="預測經期"></div>}
                                             {d.isPredictedOvulation && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-purple-400 rounded-full border-2 border-white shadow-sm" title="預測排卵日"></div>}
                                         </span>
-                                        <span className={`text-[9px] mt-0.5 ${d.isToday ? 'text-blue-600 font-bold' : 'text-gray-400'}`}>
+                                        <span className={`text-[9px] mt-0.5 ${d.isToday ? 'text-blue-600 font-bold' : d.isSelected ? 'text-rose-400 font-bold' : 'text-gray-400'}`}>
                                             {d.isToday ? '初一' : (d.day % 2 === 0 ? '初二' : '初三')}
                                         </span>
                                     </div>
