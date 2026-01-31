@@ -378,7 +378,7 @@ function App() {
     };
 
     return (
-        <Layout activePage={activePage} onNavigate={setActivePage}>
+        <Layout activePage={activePage} onNavigate={setActivePage} onShowManual={() => setShowUserManual(true)}>
             {renderContent()}
 
             {/* User Manual Toggle Button */}
@@ -405,6 +405,47 @@ function App() {
                             <div className="text-center pb-4 border-b border-rose-50">
                                 <h2 className="text-2xl font-bold text-gray-800">🌸 「來了嗎」使用手冊</h2>
                                 <p className="text-sm text-gray-400 mt-1 uppercase tracking-widest font-black">User Manual & Features</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <section className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100/30 space-y-3">
+                                    <div className="flex gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs shadow-sm">👩</div>
+                                        <div className="bg-white px-3 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm text-gray-700">我大姨媽來了。</div>
+                                    </div>
+                                    <div className="flex gap-3 flex-row-reverse">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center text-xs shadow-sm">👦</div>
+                                        <div className="bg-blue-50/50 px-3 py-2 rounded-2xl rounded-tr-none border border-blue-100/30 text-sm text-gray-700">是嗎，找個時間請她吃飯。</div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs shadow-sm">👩</div>
+                                        <div className="bg-white px-3 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm text-gray-700">XXX。</div>
+                                    </div>
+                                    <div className="h-[1px] bg-rose-100/30 my-2"></div>
+                                    <div className="flex gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs shadow-sm">👩</div>
+                                        <div className="bg-white px-3 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm text-gray-700">我MC來了肚子好疼啊！</div>
+                                    </div>
+                                    <div className="flex gap-3 flex-row-reverse">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center text-xs shadow-sm">👦</div>
+                                        <div className="bg-blue-50/50 px-3 py-2 rounded-2xl rounded-tr-none border border-blue-100/30 text-sm text-gray-700">那多喝溫水可能就不會那麼疼了。</div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-white rounded-full flex items-center justify-center text-xs shadow-sm">👩</div>
+                                        <div className="bg-white px-3 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm text-gray-700">喝喝喝，喝死你...。</div>
+                                    </div>
+                                    <div className="flex gap-3 flex-row-reverse">
+                                        <div className="flex-shrink-0 w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center text-xs shadow-sm">👦</div>
+                                        <div className="bg-blue-50/50 px-3 py-2 rounded-2xl rounded-tr-none border border-blue-100/30 text-sm text-gray-700">？？？</div>
+                                    </div>
+                                </section>
+
+                                <div className="p-4 bg-amber-50/50 rounded-2xl border border-amber-100/30">
+                                    <p className="text-sm text-amber-900 leading-relaxed font-medium">
+                                        💡 <span className="font-bold">為什麼需要這個 APP？</span><br />
+                                        男生常常因為不知道而踩坑，怎麼死的都不知道。女生把自己的狀態讓對方知道，可以得到期待的關心。
+                                    </p>
+                                </div>
                             </div>
 
                             <section className="space-y-4">
