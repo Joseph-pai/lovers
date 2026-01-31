@@ -81,26 +81,18 @@ const Tracking = ({ mode = 'calendar', onNavigate, selectedDate: propSelectedDat
     const loadRecords = async () => {
         if (!user) return;
 
-        // If partner exists, fetch both own and partner records
-        // For male, mostly interested in partner's records
-        let query = `*`;
-        if (user.partner_id) {
-            // Fetch records where user_id is either current user or partner
-            const { data, error } = await supabase
-                .from('records')
-                .select('*')
-                .or(`user_id.eq.${user.uid},user_id.eq.${user.partner_id}`);
-
-            if (data) setRecords(data);
-        } else {
-            // If no partner, strictly fetch ONLY own records
-            const { data, error } = await supabase
-                .from('records')
-                .select('*')
-                .eq('user_id', user.uid);
-
-            if (data) setRecords(data);
+        // Collect all relevant user IDs (self + all linked partners)
+        const relevantIds = [user.uid];
+        if (user.linked_partners && user.linked_partners.length > 0) {
+            user.linked_partners.forEach(p => relevantIds.push(p.id));
         }
+
+        const { data, error } = await supabase
+            .from('records')
+            .select('*')
+            .in('user_id', relevantIds);
+
+        if (data) setRecords(data);
     };
 
     const handleSave = async () => {
