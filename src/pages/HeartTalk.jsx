@@ -11,34 +11,45 @@ const HeartTalk = () => {
     const { fetchData, upsertData, loading } = useSupabase();
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
+    const [selectedPartnerId, setSelectedPartnerId] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
     const { isSoundEnabled, toggleSound } = useSound();
     const scrollRef = useRef();
 
+    // Set default partner on mount or when linked_partners changes
     useEffect(() => {
-        loadMessages();
+        if (user?.linked_partners?.length > 0 && !selectedPartnerId) {
+            setSelectedPartnerId(user.linked_partners[0].id);
+        }
+    }, [user, selectedPartnerId]);
+
+    useEffect(() => {
+        if (selectedPartnerId) {
+            loadMessages();
+        }
 
         // Subscribe to real-time message updates
-        if (!user) return;
+        if (!user || !selectedPartnerId) return;
 
-        // Listen to all message changes in the table
-        // We filter client-side because Supabase realtime filters don't support OR conditions
+        // Listen to postgres changes
         const channel = supabase
-            .channel('messages-channel')
+            .channel(`chat-${selectedPartnerId}`)
             .on(
                 'postgres_changes',
                 {
-                    event: 'INSERT', // Only listen for new messages for sound notification
+                    event: 'INSERT',
                     schema: 'public',
                     table: 'messages'
                 },
                 (payload) => {
-                    console.log('New message received:', payload);
                     const message = payload.new;
-
                     if (message) {
-                        // If it's a message for me (or from me), reload
-                        if (message.sender_id === user.uid || message.receiver_id === user.uid) {
+                        // Check if message belongs to this specific conversation
+                        const isRelevant =
+                            (message.sender_id === user.uid && message.receiver_id === selectedPartnerId) ||
+                            (message.sender_id === selectedPartnerId && message.receiver_id === user.uid);
+
+                        if (isRelevant) {
                             loadMessages();
                         }
                     }
@@ -46,11 +57,10 @@ const HeartTalk = () => {
             )
             .subscribe();
 
-        // Cleanup subscription on unmount
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user]); // Re-subscribe when user changes
+    }, [user, selectedPartnerId]);
 
     useEffect(() => {
         if (scrollRef.current && !showHistory) {
@@ -61,53 +71,43 @@ const HeartTalk = () => {
 
 
     const loadMessages = async () => {
-        if (!user) return;
+        if (!user || !selectedPartnerId) return;
 
-        // Fetch messages where I am sender or receiver
+        // Fetch messages for this specific 1-on-1 conversation
         const { data, error } = await supabase
             .from('messages')
             .select('*')
-            .or(`sender_id.eq.${user.uid},receiver_id.eq.${user.uid}`);
+            .or(`and(sender_id.eq.${user.uid},receiver_id.eq.${selectedPartnerId}),and(sender_id.eq.${selectedPartnerId},receiver_id.eq.${user.uid})`);
 
         if (data) {
-            // Sort by Date ascending (oldest first)
             setMessages(data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)));
         }
     };
 
     const handleSend = async (e) => {
         e.preventDefault();
-        if (!input.trim()) return;
+        if (!input.trim() || !selectedPartnerId) return;
 
-        if (!user.linked_partners || user.linked_partners.length === 0) {
-            alert('尚未連結伴侶，訊息將暫存在您的雲端空間唷！');
-        }
-
-        // Send message(s)
-        const sendPromises = [];
-        const baseMessage = {
+        const newMessage = {
             sender_id: user.uid,
+            receiver_id: selectedPartnerId,
             content: input,
             created_at: new Date().toISOString()
         };
 
-        if (user.linked_partners && user.linked_partners.length > 0) {
-            // For female, we current broadcast to all. 
-            // For male, we send to the female(s) he is linked to.
-            user.linked_partners.forEach(partner => {
-                sendPromises.push(upsertData('messages', { ...baseMessage, receiver_id: partner.id }));
-            });
-        } else {
-            // No partners, just save for self
-            sendPromises.push(upsertData('messages', { ...baseMessage, receiver_id: null }));
-        }
-
-        // Optimistic UI (add only once locally)
-        setMessages([...messages, { ...baseMessage, receiver_id: user.linked_partners?.[0]?.id || null }]);
+        // Optimistic UI update
+        const optimisticMsg = { ...newMessage, id: Date.now() };
+        setMessages(prev => [...prev, optimisticMsg]);
         setInput('');
 
-        await Promise.all(sendPromises);
-        loadMessages();
+        const { error } = await supabase.from('messages').insert(newMessage);
+
+        if (error) {
+            console.error('Send failed:', error);
+            // Optionally remove optimistic message or show error
+        } else {
+            loadMessages();
+        }
     };
 
     const handleDelete = async (ids) => {
@@ -139,30 +139,47 @@ const HeartTalk = () => {
 
     return (
         <div className="flex flex-col h-[calc(100vh-160px)] relative">
-            <div className="glass-card mb-4 flex items-center justify-between z-10 shrink-0">
-                <div>
-                    <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">傾心吐意</h2>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest">End-to-End Encrypted Cloud Sync</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={toggleSound}
-                        className={`p-2 rounded-full transition-all ${isSoundEnabled ? 'bg-purple-100 text-purple-500' : 'bg-gray-100 text-gray-400'}`}
-                        title={isSoundEnabled ? "關閉提示音" : "開啟提示音"}
-                    >
-                        {isSoundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-                    </button>
-                    {historyMessages.length > 0 && (
+            <div className="glass-card mb-4 shrink-0 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">傾心吐意</h2>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-widest text-left">Secure Private Chat</p>
+                    </div>
+                    <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setShowHistory(!showHistory)}
-                            className={`p-2 rounded-full transition-all ${showHistory ? 'bg-rose-100 text-rose-500' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                            onClick={toggleSound}
+                            className={`p-2 rounded-full transition-all ${isSoundEnabled ? 'bg-purple-100 text-purple-500' : 'bg-gray-100 text-gray-400'}`}
                         >
-                            <Archive size={18} />
-                            {showHistory && <span className="sr-only">Close History</span>}
+                            {isSoundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                         </button>
-                    )}
-                    <Heart className="text-pink-500/50" size={24} />
+                        {historyMessages.length > 0 && (
+                            <button
+                                onClick={() => setShowHistory(!showHistory)}
+                                className={`p-2 rounded-full transition-all ${showHistory ? 'bg-rose-100 text-rose-500' : 'bg-gray-100 text-gray-400'}`}
+                            >
+                                <Archive size={18} />
+                            </button>
+                        )}
+                    </div>
                 </div>
+
+                {/* Partner Selector for Multiple Connections */}
+                {user?.linked_partners?.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pt-2 border-t border-gray-50">
+                        {user.linked_partners.map((partner) => (
+                            <button
+                                key={partner.id}
+                                onClick={() => setSelectedPartnerId(partner.id)}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${selectedPartnerId === partner.id
+                                    ? 'bg-rose-400 text-white border-rose-400 shadow-sm scale-105'
+                                    : 'bg-white text-gray-400 border-gray-100 hover:border-rose-200'
+                                    }`}
+                            >
+                                @ {partner.nickname}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* History Overlay Panel */}
@@ -290,7 +307,7 @@ const HeartTalk = () => {
                     </button>
                 </form>
             </div>
-        </div>
+        </div >
     );
 };
 
