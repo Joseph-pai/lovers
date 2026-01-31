@@ -79,22 +79,34 @@ const HeartTalk = () => {
         e.preventDefault();
         if (!input.trim()) return;
 
-        if (!user.partner_id) {
+        if (!user.linked_partners || user.linked_partners.length === 0) {
             alert('尚未連結伴侶，訊息將暫存在您的雲端空間唷！');
         }
 
-        const newMessage = {
+        // Send message(s)
+        const sendPromises = [];
+        const baseMessage = {
             sender_id: user.uid,
-            receiver_id: user.partner_id || null,
             content: input,
             created_at: new Date().toISOString()
         };
 
-        // Optimistic UI
-        setMessages([...messages, newMessage]);
+        if (user.linked_partners && user.linked_partners.length > 0) {
+            // For female, we current broadcast to all. 
+            // For male, we send to the female(s) he is linked to.
+            user.linked_partners.forEach(partner => {
+                sendPromises.push(upsertData('messages', { ...baseMessage, receiver_id: partner.id }));
+            });
+        } else {
+            // No partners, just save for self
+            sendPromises.push(upsertData('messages', { ...baseMessage, receiver_id: null }));
+        }
+
+        // Optimistic UI (add only once locally)
+        setMessages([...messages, { ...baseMessage, receiver_id: user.linked_partners?.[0]?.id || null }]);
         setInput('');
 
-        await upsertData('messages', newMessage);
+        await Promise.all(sendPromises);
         loadMessages();
     };
 
@@ -229,24 +241,34 @@ const HeartTalk = () => {
                         <p className="text-[10px]">開始與伴侶分享妳的真心話</p>
                     </div>
                 ) : (
-                    recentMessages.map((m, i) => (
-                        <div
-                            key={i}
-                            className={`flex ${m.sender_id === user.uid ? 'justify-end' : 'justify-start'}`}
-                        >
+                    recentMessages.map((m, i) => {
+                        const isMe = m.sender_id === user.uid;
+                        const senderName = isMe
+                            ? user.nickname
+                            : (user.linked_partners?.find(p => p.id === m.sender_id)?.nickname || '伴侶');
+
+                        return (
                             <div
-                                className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm shadow-sm ${m.sender_id === user.uid
-                                    ? 'bg-gradient-to-br from-rose-400 to-pink-500 text-white rounded-tr-none'
-                                    : 'bg-white text-gray-600 rounded-tl-none border border-pink-50'
-                                    }`}
+                                key={i}
+                                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                             >
-                                {m.content}
-                                <div className={`text-[9px] mt-1 opacity-50 ${m.sender_id === user.uid ? 'text-right' : 'text-left'}`}>
-                                    {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                <span className="text-[10px] text-gray-400 mb-1 px-2 font-bold uppercase tracking-wider">
+                                    {senderName}
+                                </span>
+                                <div
+                                    className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm shadow-sm ${isMe
+                                        ? 'bg-gradient-to-br from-rose-400 to-pink-500 text-white rounded-tr-none'
+                                        : 'bg-white text-gray-600 rounded-tl-none border border-pink-50'
+                                        }`}
+                                >
+                                    {m.content}
+                                    <div className={`text-[9px] mt-1 opacity-50 ${isMe ? 'text-right' : 'text-left'}`}>
+                                        {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
 
