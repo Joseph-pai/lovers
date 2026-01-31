@@ -343,26 +343,26 @@ function App() {
                         {/* Partner Status */}
                         <section
                             onClick={() => setActivePage('partner')}
-                            className={`glass-card p-4 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-95 border-none shadow-sm ${user.partner_id
+                            className={`glass-card p-4 flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] active:scale-95 border-none shadow-sm ${user.linked_partners && user.linked_partners.length > 0
                                 ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white'
                                 : 'bg-white border-dashed border-2 border-rose-200 text-rose-400'
                                 }`}
                         >
                             <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-xl ${user.partner_id ? 'bg-white/20' : 'bg-rose-50'}`}>
-                                    {user.partner_id ? <Heart size={20} fill="currentColor" /> : <LinkIcon size={20} />}
+                                <div className={`p-2 rounded-xl ${user.linked_partners && user.linked_partners.length > 0 ? 'bg-white/20' : 'bg-rose-50'}`}>
+                                    {user.linked_partners && user.linked_partners.length > 0 ? <Heart size={20} fill="currentColor" /> : <LinkIcon size={20} />}
                                 </div>
                                 <div>
-                                    <p className={`font-bold text-sm ${user.partner_id ? 'text-white' : 'text-rose-500'}`}>
-                                        {user.partner_id ? '已建立愛之連結' : '尚未連結伴侣'}
+                                    <p className={`font-bold text-sm ${user.linked_partners && user.linked_partners.length > 0 ? 'text-white' : 'text-rose-500'}`}>
+                                        {user.linked_partners && user.linked_partners.length > 0 ? '已建立愛之連結' : '尚未連結伴侣'}
                                     </p>
-                                    <p className={`text-[10px] ${user.partner_id ? 'text-rose-50' : 'text-rose-300'} font-medium`}>
-                                        {user.partner_id ? '您的健康數據已即時同步' : '點擊此處生成專屬邀約代碼'}
+                                    <p className={`text-[10px] ${user.linked_partners && user.linked_partners.length > 0 ? 'text-rose-50' : 'text-rose-300'} font-medium`}>
+                                        {user.linked_partners && user.linked_partners.length > 0 ? `已連結 ${user.linked_partners.length} 位伴侶` : '點擊此處生成專屬邀約代碼'}
                                     </p>
                                 </div>
                             </div>
-                            <div className={`text-xs font-black ${user.partner_id ? 'text-white/50' : 'text-rose-200'}`}>
-                                {user.partner_id ? <Users size={16} /> : 'GO →'}
+                            <div className={`text-xs font-black ${user.linked_partners && user.linked_partners.length > 0 ? 'text-white/50' : 'text-rose-200'}`}>
+                                {user.linked_partners && user.linked_partners.length > 0 ? <Users size={16} /> : 'GO →'}
                             </div>
                         </section>
 
