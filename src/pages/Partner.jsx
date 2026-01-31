@@ -10,9 +10,30 @@ const Partner = ({ onUpgrade }) => {
     const [inviteCodeInput, setInviteCodeInput] = useState('');
     const [copied, setCopied] = useState(false);
     const [statusMessage, setStatusMessage] = useState(null);
+    const [activeInvite, setActiveInvite] = useState(null);
 
-    // Profile data from auth context (now includes supabase fields)
-    const myInviteCode = user?.invite_code || '';
+    // Fetch active invite code on mount
+    React.useEffect(() => {
+        if (user && user.gender === 'female') {
+            fetchActiveInvite();
+        }
+    }, [user]);
+
+    const fetchActiveInvite = async () => {
+        const { data, error } = await supabase
+            .from('invites')
+            .select('code')
+            .eq('creator_id', user.uid)
+            .eq('is_used', false)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (data) {
+            setActiveInvite(data.code);
+        }
+    };
+
     const partnerId = user?.linked_partners?.[0]?.id; // Legacy support or first partner check
 
     const handleGenerateCode = async () => {
@@ -26,15 +47,15 @@ const Partner = ({ onUpgrade }) => {
             });
 
         if (!error) {
-            window.location.reload(); // Quick refresh to update context
+            setActiveInvite(newCode);
         } else {
             alert('代碼生成失敗: ' + error.message);
         }
     };
 
     const handleCopy = () => {
-        if (!myInviteCode) return;
-        navigator.clipboard.writeText(myInviteCode);
+        if (!activeInvite) return;
+        navigator.clipboard.writeText(activeInvite);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -137,15 +158,37 @@ const Partner = ({ onUpgrade }) => {
             {user.gender === 'female' && (
                 <div className="glass-card">
                     <h3 className="text-sm font-bold text-gray-400 mb-4 uppercase tracking-[0.3em] text-center">您的邀約連結代碼</h3>
-                    <button
-                        onClick={handleGenerateCode}
-                        className="w-full py-8 border-2 border-dashed border-rose-100 rounded-3xl text-rose-400 font-bold hover:bg-rose-50/50 transition-all group"
-                    >
-                        <span className="flex items-center justify-center gap-2 group-hover:scale-105 transition-transform">
-                            ✨ 點擊生成新的一次性邀請碼
-                        </span>
-                    </button>
-                    <p className="text-[10px] text-gray-400 text-center mt-4 font-bold italic">代碼為隨機且一次性，使用後即失效</p>
+
+                    {activeInvite ? (
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between bg-gradient-to-br from-rose-50 to-white border border-rose-100 p-6 rounded-3xl shadow-sm">
+                                <span className="text-3xl font-black tracking-[0.2em] text-rose-500 drop-shadow-sm">{activeInvite}</span>
+                                <button
+                                    onClick={handleCopy}
+                                    className="p-4 bg-white text-rose-500 rounded-2xl border border-rose-100/50 hover:bg-rose-50 transition-all active:scale-95 shadow-sm"
+                                >
+                                    {copied ? <Check size={20} className="text-green-500" /> : <Copy size={20} />}
+                                </button>
+                            </div>
+                            <button
+                                onClick={handleGenerateCode}
+                                className="text-xs text-rose-300 font-bold hover:text-rose-400 transition-colors uppercase tracking-widest text-center"
+                            >
+                                🔄 生成新的邀請碼
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleGenerateCode}
+                            className="w-full py-8 border-2 border-dashed border-rose-100 rounded-3xl text-rose-400 font-bold hover:bg-rose-50/50 transition-all group"
+                        >
+                            <span className="flex items-center justify-center gap-2 group-hover:scale-105 transition-transform">
+                                ✨ 點擊生成一次性邀請碼
+                            </span>
+                        </button>
+                    )}
+
+                    <p className="text-[10px] text-gray-400 text-center mt-4 font-bold italic">分享代碼給伴侶，單次使用後失效</p>
                 </div>
             )}
 
